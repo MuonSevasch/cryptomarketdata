@@ -5,16 +5,25 @@ import requests
 
 from .auth import Auth
 
-
 class DataLoader:
     def __init__(self, auth: Auth):
         self.auth = auth
         self.pattern = r"/(\d{4}-\d{2}-\d{2})/(\d{2}-\d{2}-\d{2})\.parquet"
+        self.data_types = ['deltas', 'book_ticks', 'snapshots']
 
-    def load_data(self, exchange, symbols, start_date, end_date):
+    def load_data(self, data_type, exchange, symbols, start_date, end_date):
+        """Загружает данные указанного типа с сервера"""
+        endpoints = {
+            'deltas': 'deltas/get-files-urls',
+            'book_ticks': 'book_ticks/get-files-urls',
+            'snapshots': 'snapshots/get-files-urls'
+        }
+
+        if data_type not in endpoints:
+            raise ValueError(f"Unsupported data type: {data_type}. Available types: {list(endpoints.keys())}")
+
         for symbol in symbols:
-            # Запрос на сервер для получения ссылки на данные
-            url = f"{self.auth.base_url}/api/deltas/get-files-urls"
+            url = f"{self.auth.base_url}/api/{endpoints[data_type]}"
             params = {
                 "code": symbol,
                 "startTime": start_date,
@@ -22,22 +31,27 @@ class DataLoader:
                 "expirationInMinutes": 60
             }
 
-            response = requests.get(url, headers=self.auth.get_headers(), params=params)
+            try:
+                response = requests.get(
+                    url,
+                    headers=self.auth.get_headers(),
+                    params=params,
+                    timeout=10
+                )
+                response.raise_for_status()
 
-            if response.status_code == 200:
                 file_urls = response.json()
                 for file_url in file_urls:
-                    self.download_and_save(file_url, exchange, symbol)
-            else:
-                print(f"Failed to retrieve file URLs for {symbol}. Status code: {response.status_code}")
+                    self.download_and_save(file_url, exchange, symbol, data_type)
 
+            except requests.exceptions.RequestException as e:
+                print(f"Error loading {data_type} data for {symbol}: {str(e)}")
 
-    def download_and_save(self, file_url, exchange, symbol):
+    def download_and_save(self, file_url, exchange, symbol, data_type):
         response = requests.get(file_url)
         if response.status_code == 200:
-
-            # Создаем директорию для сохранения файла
-            directory = f"data/{exchange}/{symbol}"
+            # Создаем директорию с учетом типа данных
+            directory = f"data/{exchange}/{symbol}/{data_type}"
             os.makedirs(directory, exist_ok=True)
 
             match = re.search(self.pattern, file_url)
