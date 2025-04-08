@@ -10,20 +10,22 @@ class DataLoader:
         self.auth = auth
         self.pattern = r"/(\d{4}-\d{2}-\d{2})/(\d{2}-\d{2}-\d{2})\.parquet"
         self.data_types = ['deltas', 'book_ticks', 'snapshots']
+        self.exchange = ['binance']
+        self.market = ['spot', 'coin', 'usd']
 
-    def load_data(self, data_type, exchange, symbols, start_date, end_date):
-        """Загружает данные указанного типа с сервера"""
-        endpoints = {
-            'deltas': 'deltas/get-files-urls',
-            'book_ticks': 'book_ticks/get-files-urls',
-            'snapshots': 'snapshots/get-files-urls'
-        }
+    def load_data(self, exchange, market , load_type, symbols, start_date, end_date):
 
-        if data_type not in endpoints:
-            raise ValueError(f"Unsupported data type: {data_type}. Available types: {list(endpoints.keys())}")
+        if exchange not in self.exchange:
+            raise ValueError(f"Unsupported exchange: {exchange}. Available types: {list(self.exchange)}")
+
+        if market not in self.market:
+            raise ValueError(f"Unsupported market: {market}. Available types: {list(self.market)}")
+
+        if load_type not in self.data_types:
+            raise ValueError(f"Unsupported data type: {load_type}. Available types: {list(self.data_types)}")
 
         for symbol in symbols:
-            url = f"{self.auth.base_url}/api/{endpoints[data_type]}"
+            url = f"{self.auth.base_url}/api/data/{exchange}/{market}/{load_type}/get-files-urls"
             params = {
                 "code": symbol,
                 "startTime": start_date,
@@ -42,16 +44,15 @@ class DataLoader:
 
                 file_urls = response.json()
                 for file_url in file_urls:
-                    self.download_and_save(file_url, exchange, symbol, data_type)
+                    self.download_and_save(file_url, exchange, market, symbol, load_type)
 
             except requests.exceptions.RequestException as e:
-                print(f"Error loading {data_type} data for {symbol}: {str(e)}")
+                print(f"Error loading {load_type} data for {symbol}: {str(e)}")
 
-    def download_and_save(self, file_url, exchange, symbol, data_type):
+    def download_and_save(self, file_url, exchange, market, symbol, data_type):
         response = requests.get(file_url)
         if response.status_code == 200:
-            # Создаем директорию с учетом типа данных
-            directory = f"data/{exchange}/{symbol}/{data_type}"
+            directory = f"data/{exchange}/{market}/{symbol}/{data_type}"
             os.makedirs(directory, exist_ok=True)
 
             match = re.search(self.pattern, file_url)
@@ -61,7 +62,6 @@ class DataLoader:
                 time = match.group(2)
                 file_path = f"{directory}/{date}T{time}.parquet"
 
-            # Сохраняем файл
             with open(file_path, 'wb') as f:
                 f.write(response.content)
 
