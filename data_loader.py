@@ -3,7 +3,7 @@ import re
 
 import requests
 
-from .auth import Auth
+from auth import Auth
 
 class DataLoader:
     def __init__(self, auth: Auth):
@@ -50,17 +50,23 @@ class DataLoader:
                 print(f"Error loading {load_type} data for {symbol}: {str(e)}")
 
     def download_and_save(self, file_url, exchange, market, symbol, data_type):
+        directory = f"data/{exchange}/{market}/{symbol}/{data_type}"
+
+        match = re.search(self.pattern, file_url)
+        if match:
+            date = match.group(1)
+            time = match.group(2)
+            file_path = f"{directory}/{date}T{time}.parquet"
+        else:
+            print(f"Failed to download file from {file_url}")
+            return
+        if os.path.exists(file_path):
+            print(f"File already exists at {file_path}")
+            return
         response = requests.get(file_url)
         if response.status_code == 200:
-            directory = f"data/{exchange}/{market}/{symbol}/{data_type}"
             os.makedirs(directory, exist_ok=True)
 
-            match = re.search(self.pattern, file_url)
-            file_path = f"{directory}/{symbol}_.parquet"
-            if match:
-                date = match.group(1)
-                time = match.group(2)
-                file_path = f"{directory}/{date}T{time}.parquet"
 
             with open(file_path, 'wb') as f:
                 f.write(response.content)
