@@ -1,7 +1,7 @@
-import os
-import re
+from . import os
+from . import re
 
-import requests
+from . import requests
 
 from auth import Auth
 

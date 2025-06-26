@@ -1,4 +1,4 @@
-import os
+from . import os
 
 
 def save_parquet(df, exchange, symbol, data_type):
