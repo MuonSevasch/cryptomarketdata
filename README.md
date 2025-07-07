@@ -1,0 +1,1 @@
+The official data loader utility for the historical crypto market data provider [cryptomd.net](https://cryptomd.net/). The installation and usage guide is available in our [Wiki](https://github.com/MuonSevasch/cryptomarketdata/wiki). 
