@@ -1,9 +1,9 @@
-from . import os
-from . import re
+import os
+import re
 
-from . import requests
+import requests
 
-from auth import Auth
+from .auth import Auth
 
 class DataLoader:
     def __init__(self, auth: Auth):

@@ -1,5 +1,5 @@
-from cryptomd.cryptomarketdata.auth import Auth
-from cryptomd.cryptomarketdata.data_loader import DataLoader
+from .auth import Auth
+from .data_loader import DataLoader
 
 
 def get_loader(token) -> DataLoader:
@@ -11,5 +11,3 @@ def get_loader(token) -> DataLoader:
     auth.login(username, password)
     loader = DataLoader(auth)
     return loader
-
-

@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setup(
     name="cryptomd",
-    version="0.1.0",
+    version="0.2.0",
     author="Arseny Zaitsev",
     author_email="arseny.zaitsev@gmail.com",
     description="Lib for cryptomarket data",
@@ -18,7 +18,7 @@ setup(
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved ::Apache Software License",
+        "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
